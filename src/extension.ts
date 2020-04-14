@@ -11,56 +11,38 @@ export async function activate(context: vscode.ExtensionContext) {
 	// This line of code will only be executed once when your extension is activated
 	console.log('Congratulations, your extension "didact-ext" is now active!');
 
-	await registerTutorialWithDidact(context);
-	await registerTOCExampleWithDidact(context);
+	await installAllTutorials(context);
 }
 
 // this method is called when your extension is deactivated
 export function deactivate() {}
 
-async function registerTutorialWithDidact(context: vscode.ExtensionContext) {
-	try {
-		// test to ensure didact is available 
-		const extensionId = 'redhat.vscode-didact';
-		const didactExt : any = vscode.extensions.getExtension(extensionId);
-		if (didactExt) {
-			const commandId = 'vscode.didact.register';
-			const tutorialName = `Tutorial-from-extension`; // replace this with the name of your integration to appear in the Didact view
-			const tutorialPath = path.join(context.extensionPath, `./tutorial/hosted.didact.md`); // replace this path with the location of your Didact file like ./path/to/tutorial.didact.md or ./path/to/tutorial.didact.adoc
-			const tutorialUri = vscode.Uri.parse(`file://${tutorialPath}`);
-			const tutorialCategory = `didact-ext`; // replace this with the name of the category for your tutorial
+async function installAllTutorials(context : vscode.ExtensionContext) {
+	let tutorialList = {
+		"tutorials": [
+			{"name": "Tutorial-from-extension", "extpath" : "./tutorial/hosted.didact.md", "category": "didact-ext"},
+			{"name": "TOC-example-from-extension", "extpath" : "./tableofcontents/root-toc.didact.md", "category": "didact-ext"},
+			{"name": "table-example-from-extension", "extpath" : "./dep-table/dep-table.didact.md", "category": "didact-ext"}
+		]
+	};
 
-			// then pass name, uri, and category
-			await vscode.commands.executeCommand(
-				commandId,
-				tutorialName, 
-				tutorialUri,
-				tutorialCategory);
-		}
-	} catch (error) {
-		console.log(error);
-	}
-
+	tutorialList.tutorials.forEach( async tutorial => {
+		await registerTutorialWithDidact(context, tutorial.name, tutorial.extpath, tutorial.category);
+	});
 }
 
-async function registerTOCExampleWithDidact(context: vscode.ExtensionContext) {
+async function registerTutorialWithDidact(context: vscode.ExtensionContext, name : string, extpath : string, category : string) {
 	try {
 		// test to ensure didact is available 
 		const extensionId = 'redhat.vscode-didact';
 		const didactExt : any = vscode.extensions.getExtension(extensionId);
 		if (didactExt) {
 			const commandId = 'vscode.didact.register';
-			const tutorialName = `Example-from-extension`; // replace this with the name of your integration to appear in the Didact view
-			const tutorialPath = path.join(context.extensionPath, `./tableofcontents/root-toc.didact.md`); // replace this path with the location of your Didact file like ./path/to/tutorial.didact.md or ./path/to/tutorial.didact.adoc
+			const tutorialPath = path.join(context.extensionPath, extpath);
 			const tutorialUri = vscode.Uri.parse(`file://${tutorialPath}`);
-			const tutorialCategory = `didact-ext`; // replace this with the name of the category for your tutorial
 
 			// then pass name, uri, and category
-			await vscode.commands.executeCommand(
-				commandId,
-				tutorialName, 
-				tutorialUri,
-				tutorialCategory);
+			await vscode.commands.executeCommand(commandId,	name, tutorialUri, category);
 		}
 	} catch (error) {
 		console.log(error);
